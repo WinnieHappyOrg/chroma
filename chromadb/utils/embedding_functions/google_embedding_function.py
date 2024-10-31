@@ -81,6 +81,17 @@ class GoogleGenerativeAiEmbeddingFunction(EmbeddingFunction[Documents]):
         ]
 
 
+from vertexai.preview.language_models import TextEmbeddingModel
+from vertexai.preview.language_models import TextEmbeddingInput
+import os
+import vertexai
+def get_query_vector(question: str):
+    """将用户问题转换为查询向量。"""
+    text_embedding_input = TextEmbeddingInput(text=question)
+    model = TextEmbeddingModel.from_pretrained("text-multilingual-embedding-002")
+    embeddings = model.get_embeddings([text_embedding_input])
+    query_vector = embeddings[0].values
+    return query_vector
 class GoogleVertexEmbeddingFunction(EmbeddingFunction[Documents]):
     # Follow API Quickstart for Google Vertex AI
     # https://cloud.google.com/vertex-ai/docs/generative-ai/start/quickstarts/api-quickstart
@@ -89,22 +100,24 @@ class GoogleVertexEmbeddingFunction(EmbeddingFunction[Documents]):
     def __init__(
         self,
         api_key: str,
-        model_name: str = "textembedding-gecko",
+        embedding_model_name: str = "textembedding-gecko",
         project_id: str = "cloud-large-language-models",
         region: str = "us-central1",
+        GOOGLE_APPLICATION_CREDENTIALS:str=""
     ):
-        self._api_url = f"https://{region}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{region}/publishers/goole/models/{model_name}:predict"
-        self._session = httpx.Client()
-        self._session.headers.update({"Authorization": f"Bearer {api_key}"})
-
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
+        vertexai.init(project=project_id, location=region)
+        
     def __call__(self, input: Documents) -> Embeddings:
         embeddings = []
         for text in input:
-            response = self._session.post(
-                self._api_url, json={"instances": [{"content": text}]}
-            ).json()
+            dataArray=get_query_vector(text)
+            # response = self._session.post(
+            #     self._api_url, json={"instances": [{"content": text}]}
+            # ).json()
 
-            if "predictions" in response:
-                embeddings.append(response["predictions"]["embeddings"]["values"])
+            # if "predictions" in response:
+                # embeddings.append(response["predictions"]["embeddings"]["values"])
+            embeddings.append(dataArray)
 
         return embeddings
