@@ -112,7 +112,7 @@ class GoogleVertexEmbeddingFunction(EmbeddingFunction[Documents]):
     def __call__(self, input: Documents) -> Embeddings:
         embeddings = []
         for text in input:
-            dataArray=get_query_vector(text)
+            dataArray=get_query_vector(text,self.embedding_model_name)
             # response = self._session.post(
             #     self._api_url, json={"instances": [{"content": text}]}
             # ).json()
