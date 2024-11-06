@@ -85,10 +85,10 @@ from vertexai.preview.language_models import TextEmbeddingModel
 from vertexai.preview.language_models import TextEmbeddingInput
 import os
 import vertexai
-def get_query_vector(question: str):
+def get_query_vector(question: str,_embedding_model_name: str):
     """将用户问题转换为查询向量。"""
     text_embedding_input = TextEmbeddingInput(text=question)
-    model = TextEmbeddingModel.from_pretrained("text-multilingual-embedding-002")
+    model = TextEmbeddingModel.from_pretrained(_embedding_model_name)
     embeddings = model.get_embeddings([text_embedding_input])
     query_vector = embeddings[0].values
     return query_vector
@@ -107,6 +107,7 @@ class GoogleVertexEmbeddingFunction(EmbeddingFunction[Documents]):
     ):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
         vertexai.init(project=project_id, location=region)
+        self.embedding_model_name=embedding_model_name
         
     def __call__(self, input: Documents) -> Embeddings:
         embeddings = []
